@@ -1,21 +1,47 @@
 --[[
-    YUXAN.CC PREMIUM LOADER (FIXED V2)
+    YUXAN.CC PREMIUM LOADER (FIXED V3 - UNDETECTED)
 --]]
 
+local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- UI Temizliği
-local old = CoreGui:FindFirstChild("YuxanLoader")
-if old then old:Destroy() end
+-- Stealth Name Generation
+local function GenerateName()
+    return HttpService:GenerateGUID(false):gsub("-", ""):sub(1, math.random(8, 12))
+end
+
+local StealthName = GenerateName()
+
+-- UI Temizliği (Global Variable Check - Stealthier than FindFirstChild)
+if getgenv().YuxanLoaded then
+    pcall(function() getgenv().YuxanLoaded:Destroy() end)
+    getgenv().YuxanLoaded = nil
+end
+
+-- Stealth Parenting
+local Parent = nil
+if gethui then
+    Parent = gethui()
+elseif (syn and syn.protect_gui) then
+    Parent = CoreGui
+else
+    Parent = CoreGui
+end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "YuxanLoader"
-ScreenGui.Parent = CoreGui
+ScreenGui.Name = StealthName
+ScreenGui.Parent = Parent
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.DisplayOrder = 999
+
+if (syn and syn.protect_gui) then
+    syn.protect_gui(ScreenGui)
+end
+
+getgenv().YuxanLoaded = ScreenGui
 
 -- Karartma Arkaplanı
 local Background = Instance.new("Frame")
@@ -45,12 +71,12 @@ Stroke.Transparency = 0.8
 Stroke.Thickness = 1.5
 Stroke.Parent = MainFrame
 
--- Logo
+-- Logo (Obfuscated Text)
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.Position = UDim2.new(0, 0, 0, 15)
 Title.BackgroundTransparency = 1
-Title.Text = "yuxan.cc"
+Title.Text = string.reverse("cc.naxuy")
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 24
@@ -62,7 +88,7 @@ local Status = Instance.new("TextLabel")
 Status.Size = UDim2.new(1, 0, 0, 20)
 Status.Position = UDim2.new(0, 0, 0, 50)
 Status.BackgroundTransparency = 1
-Status.Text = "Starting session..."
+Status.Text = "Initializing..."
 Status.TextColor3 = Color3.fromRGB(180, 180, 180)
 Status.Font = Enum.Font.Gotham
 Status.TextSize = 13
@@ -87,9 +113,9 @@ ProgressFill.Parent = ProgressContainer
 Instance.new("UICorner", ProgressContainer).CornerRadius = UDim.new(1, 0)
 Instance.new("UICorner", ProgressFill).CornerRadius = UDim.new(1, 0)
 
--- Selection Frame (Oyun Seçme Menüsü)
+-- Selection Frame
 local SelectionFrame = Instance.new("Frame")
-SelectionFrame.Size = UDim2.new(1, -40, 0, 0) -- Başlangıçta yüksekliği 0
+SelectionFrame.Size = UDim2.new(1, -40, 0, 0)
 SelectionFrame.Position = UDim2.new(0.5, 0, 0, 60)
 SelectionFrame.AnchorPoint = Vector2.new(0.5, 0)
 SelectionFrame.BackgroundTransparency = 1
@@ -136,25 +162,25 @@ local function CreateButton(name, url)
     end)
 
     Button.MouseButton1Click:Connect(function()
-        Status.Text = "Executing " .. name .. "..."
+        Status.Text = "Loading..."
         TweenService:Create(SelectionFrame, TweenInfo.new(0.5), {Size = UDim2.new(1, -40, 0, 0)}):Play()
         task.wait(0.5)
         
         local success, err = pcall(function()
-            loadstring(game:HttpGet(url))()
+            local code = game:HttpGet(url)
+            loadstring(code)()
         end)
         
         if success then
-            Status.Text = "Success!"
+            Status.Text = "Completed"
             task.wait(0.5)
-            -- KAPANIŞ
             TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 120)}):Play()
             TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
             task.wait(0.6)
             ScreenGui:Destroy()
+            getgenv().YuxanLoaded = nil
         else
-            Status.Text = "Execution Error!"
-            warn("Yuxan Error: " .. tostring(err))
+            Status.Text = "Error"
         end
     end)
 end
@@ -168,20 +194,18 @@ local function UpdateProgress(percent, text)
 end
 
 -- BAŞLAT
-local ScriptURL = "https://raw.githubusercontent.com/KULLANICI_ADI/REPO_ADI/main/script.lua" -- Varsayılan link
-
 TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
 task.wait(0.3)
 TweenService:Create(MainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 350, 0, 120)}):Play()
 task.wait(0.8)
 
-UpdateProgress(20, "Authenticating...")
-task.wait(0.8)
-UpdateProgress(50, "Bypassing...")
-task.wait(0.8)
-UpdateProgress(80, "Injecting UI...")
-task.wait(0.8)
-UpdateProgress(100, "Ready!")
+UpdateProgress(20, "Securing...")
+task.wait(0.6)
+UpdateProgress(50, "Patching...")
+task.wait(0.6)
+UpdateProgress(80, "Finalizing...")
+task.wait(0.6)
+UpdateProgress(100, "Done")
 task.wait(0.5)
 
 -- Seçim Menüsünü Göster
@@ -189,13 +213,13 @@ TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.E
 TweenService:Create(ProgressContainer, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
 TweenService:Create(ProgressFill, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
 TweenService:Create(Status, TweenInfo.new(0.4), {Position = UDim2.new(0, 0, 0, 45)}):Play()
-Status.Text = "Select a script to load"
+Status.Text = "Select Option"
 
 task.wait(0.2)
 SelectionFrame.Size = UDim2.new(1, -40, 0, 160)
 
 CreateButton("Universal", "https://raw.githubusercontent.com/cl0xx/yuxan/refs/heads/main/yuxanuniversalobf.lua")
+CreateButton("Blox Strike", "https://raw.githubusercontent.com/cl0xx/yuxan/refs/heads/main/yuxancbobf.lua")
 
-CreateButton("Counter Blox", "https://raw.githubusercontent.com/cl0xx/yuxan/refs/heads/main/yuxancbobf.lua")
 
 -- Kapatma butonu gerekirse buraya eklenebilir
